@@ -16,7 +16,7 @@ This repository documents a lab setup for:
 
 ## Runbooks
 1. CPSH install and FIPS setup: [`CPSH_INSTALL.md`](./CPSH_INSTALL.md)
-2. CPSH install with customer-provided certificates: [`CPSH_CUSTOM_CERT.md`](./CPSH_CUSTOM_CERT.md)
+2. CPSH install with customer-provided certificates (`BCFKS` for FIPS): [`CPSH_CUSTOM_CERT.md`](./CPSH_CUSTOM_CERT.md)
 3. Edge install (Zarf + k3s + self-signed cert fixes): [`EDGE_INSTALL.md`](./EDGE_INSTALL.md)
 4. Edge install with customer-provided certificates: [`EDGE_CUSTOM_CERT.md`](./EDGE_CUSTOM_CERT.md)
 
@@ -27,7 +27,7 @@ This repository documents a lab setup for:
 4. For customer/private CA cert environments, use [`EDGE_CUSTOM_CERT.md`](./EDGE_CUSTOM_CERT.md)
 
 ## Certificate Paths
-- Use [`CPSH_CUSTOM_CERT.md`](./CPSH_CUSTOM_CERT.md) when DGC and Console should present customer-provided certificates instead of the default CPSH certificates.
+- Use [`CPSH_CUSTOM_CERT.md`](./CPSH_CUSTOM_CERT.md) when DGC and Console should present customer-provided certificates instead of the default CPSH certificates. This runbook uses `BCFKS` keystores for the FIPS-enabled CPSH services.
 - Use [`EDGE_INSTALL.md`](./EDGE_INSTALL.md) when CPSH is running with a self-signed certificate and you need the trust workaround flow.
 - Use [`EDGE_CUSTOM_CERT.md`](./EDGE_CUSTOM_CERT.md) when CPSH is already configured with customer-provided certificates and the Edge host should trust the customer CA chain directly.
 

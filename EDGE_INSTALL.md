@@ -15,40 +15,15 @@ read -s -p "PLATFORM_PASSWORD: " PLATFORM_PASSWORD; echo
 ## 2. Install tools + Zarf CLI
 
 ```bash
-# ---- OS prereqs ----
-sudo dnf install -y curl jq zstd openssl policycoreutils-python-utils kernel-modules-extra tar gzip
+dnf install -y jq curl tar zstd openssl
 
-# Keep SELinux enforcing; add contexts used by k3s/local-path-provisioner
-sudo mkdir -p /var/lib/rancher/k3s /opt/local-path-provisioner
-sudo semanage fcontext -a -t container_file_t "/var/lib/rancher(/.*)?" || true
-sudo semanage fcontext -a -t container_file_t "/opt/local-path-provisioner(/.*)?" || true
-sudo restorecon -Rv /var/lib/rancher /opt/local-path-provisioner || true
+ZARF_VERSION="0.73.0"
+curl -L "https://github.com/zarf-dev/zarf/releases/download/${ZARF_VERSION}/zarf_${ZARF_VERSION}_Linux_amd64.tar.gz" \
+  -o /tmp/zarf-${ZARF_VERSION}.tar.gz
 
-# Lab networking prep
-sudo systemctl disable --now nm-cloud-setup.service || true
-sudo systemctl stop firewalld || true
-
-# Kernel networking
-echo br_netfilter | sudo tee /etc/modules-load.d/br_netfilter.conf
-sudo modprobe br_netfilter
-echo 'net.bridge.bridge-nf-call-iptables=1' | sudo tee /etc/sysctl.d/99-k3s.conf
-echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.d/99-k3s.conf
-sudo sysctl --system
-
-# ---- Install k3s ----
-curl -sfL https://get.k3s.io | sh -
-mkdir -p ~/.kube
-sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
-sudo chown "$USER:$USER" ~/.kube/config
-chmod 600 ~/.kube/config
-export KUBECONFIG="$HOME/.kube/config"
-kubectl get nodes
-
-
-# ---- Install Zarf CLI from upstream ----
-ZARF_VERSION=$(curl -sIX HEAD https://github.com/zarf-dev/zarf/releases/latest | awk -F/ '/^location:/ {gsub("\r","",$NF); print $NF}')
-curl -sL "https://github.com/zarf-dev/zarf/releases/download/${ZARF_VERSION}/zarf_${ZARF_VERSION}_Linux_amd64" -o /usr/local/bin/zarf
-chmod +x /usr/local/bin/zarf
+mkdir -p /tmp/zarf-install
+tar -xzf /tmp/zarf-${ZARF_VERSION}.tar.gz -C /tmp/zarf-install
+install -m 0755 "$(find /tmp/zarf-install -type f -name zarf | head -n1)" /usr/local/bin/zarf
 zarf version
 ```
 

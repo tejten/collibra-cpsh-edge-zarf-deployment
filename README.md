@@ -36,3 +36,11 @@ This repository documents a lab setup for:
 - CPSH Extended Capabilities install: <https://productresources.collibra.com/docs/cpsh/latest/Content/Installation/CPSH/ta_cpsh-install.htm>
 - Zarf-based CPSH Edge install: <https://productresources.collibra.com/docs/cpsh/latest/Content/Installation/CPSH/ta_cpsh-edge-extend-cap.htm>
 - Delete Edge site: <https://productresources.collibra.com/docs/collibra/latest/Content/Edge/EdgeSiteManagement/ta_delete-edge-site.htm>
+
+## License
+
+This project is licensed under the MIT License.
+
+## Credits
+
+Original material by Tej Tenmattam (Version 01, March 16, 2026).

@@ -18,6 +18,25 @@ read -s -p "PLATFORM_PASSWORD: " PLATFORM_PASSWORD; echo
 
 dnf install -y jq curl openssl
 
+# Keep SELinux enforcing; add contexts used by k3s/local-path-provisioner
+sudo mkdir -p /var/lib/rancher/k3s /opt/local-path-provisioner
+sudo semanage fcontext -a -t container_file_t "/var/lib/rancher(/.*)?" || true
+sudo semanage fcontext -a -t container_file_t "/opt/local-path-provisioner(/.*)?" || true
+sudo restorecon -Rv /var/lib/rancher /opt/local-path-provisioner || true
+
+# Lab networking prep
+sudo systemctl disable --now nm-cloud-setup.service || true
+sudo systemctl stop firewalld || true
+
+# Kernel networking
+echo br_netfilter | sudo tee /etc/modules-load.d/br_netfilter.conf
+sudo modprobe br_netfilter
+echo 'net.bridge.bridge-nf-call-iptables=1' | sudo tee /etc/sysctl.d/99-k3s.conf
+echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.d/99-k3s.conf
+sudo sysctl --system
+
+# ---- Install zarf ----
+
 ZARF_VERSION="v0.73.0"
 
 rm -f /tmp/zarf /usr/local/bin/zarf

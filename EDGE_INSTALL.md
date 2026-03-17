@@ -15,16 +15,22 @@ read -s -p "PLATFORM_PASSWORD: " PLATFORM_PASSWORD; echo
 ## 2. Install tools + Zarf CLI
 
 ```bash
-dnf install -y jq curl tar zstd openssl
 
-ZARF_VERSION="0.73.0"
-curl -L "https://github.com/zarf-dev/zarf/releases/download/${ZARF_VERSION}/zarf_${ZARF_VERSION}_Linux_amd64.tar.gz" \
-  -o /tmp/zarf-${ZARF_VERSION}.tar.gz
+dnf install -y jq curl openssl
 
-mkdir -p /tmp/zarf-install
-tar -xzf /tmp/zarf-${ZARF_VERSION}.tar.gz -C /tmp/zarf-install
-install -m 0755 "$(find /tmp/zarf-install -type f -name zarf | head -n1)" /usr/local/bin/zarf
-zarf version
+ZARF_VERSION="v0.73.0"
+
+rm -f /tmp/zarf /usr/local/bin/zarf
+
+curl -sL "https://github.com/zarf-dev/zarf/releases/download/${ZARF_VERSION}/zarf_${ZARF_VERSION}_Linux_amd64" \
+  -o /tmp/zarf
+
+ls -lh /tmp/zarf
+file /tmp/zarf
+chmod +x /tmp/zarf
+install -m 0755 /tmp/zarf /usr/local/bin/zarf
+
+/usr/local/bin/zarf version
 ```
 
 ## 3. Extract Edge package from Collibra bundle

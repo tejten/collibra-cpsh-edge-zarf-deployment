@@ -31,6 +31,15 @@ chmod +x /tmp/zarf
 install -m 0755 /tmp/zarf /usr/local/bin/zarf
 
 /usr/local/bin/zarf version
+
+# ---- Install k3s ----
+curl -sfL https://get.k3s.io | sh -
+mkdir -p ~/.kube
+sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+sudo chown "$USER:$USER" ~/.kube/config
+chmod 600 ~/.kube/config
+export KUBECONFIG="$HOME/.kube/config"
+kubectl get nodes
 ```
 
 ## 3. Extract Edge package from Collibra bundle

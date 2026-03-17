@@ -46,8 +46,7 @@ kubectl get nodes
 
 ```bash
 PKG_VER="1.43.7"
-tar -xzf "/tmp/zarf-packages-amd64-${PKG_VER}.tar.gz" -C /tmp
-EDGE_PKG="$(find /tmp -type f -name "zarf-package-cpsh-edge-amd64-${PKG_VER}.tar.zst" | head -n1)"
+EDGE_PKG="/tmp/zarf-package-cpsh-edge-amd64-${PKG_VER}.tar.zst"
 echo "$EDGE_PKG"
 test -f "$EDGE_PKG"
 ```

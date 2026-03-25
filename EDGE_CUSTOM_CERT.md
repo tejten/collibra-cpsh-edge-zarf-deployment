@@ -24,6 +24,11 @@ export PKG_VER="1.43.7"
 export ZARF_VERSION="0.73.0"
 ```
 
+Important:
+- `PLATFORM_ID` must point to the CPSH DGC HTTPS endpoint on port `5443`
+- do not use the CPSH Admin Console port `5404` here
+- example: `https://<cpsh-host-fqdn>:5443`
+
 Certificate files expected:
 - Edge host private key: `<edge-host>.key`
 - Edge host certificate or PFX bundle: `<edge-host>.crt` or `<edge-host>.pfx`
@@ -54,57 +59,22 @@ Expected: HTTP `200` and JSON response.
 ## 3. Install required tools and Zarf CLI
 
 ```bash
+sudo dnf install -y jq curl tar zstd openssl
 
-dnf install -y jq curl openssl
+curl -L "https://github.com/zarf-dev/zarf/releases/download/${ZARF_VERSION}/zarf_${ZARF_VERSION}_Linux_amd64.tar.gz" \
+  -o /tmp/zarf-${ZARF_VERSION}.tar.gz
 
-# Keep SELinux enforcing; add contexts used by k3s/local-path-provisioner
-sudo mkdir -p /var/lib/rancher/k3s /opt/local-path-provisioner
-sudo semanage fcontext -a -t container_file_t "/var/lib/rancher(/.*)?" || true
-sudo semanage fcontext -a -t container_file_t "/opt/local-path-provisioner(/.*)?" || true
-sudo restorecon -Rv /var/lib/rancher /opt/local-path-provisioner || true
-
-# Lab networking prep
-sudo systemctl disable --now nm-cloud-setup.service || true
-sudo systemctl stop firewalld || true
-
-# Kernel networking
-echo br_netfilter | sudo tee /etc/modules-load.d/br_netfilter.conf
-sudo modprobe br_netfilter
-echo 'net.bridge.bridge-nf-call-iptables=1' | sudo tee /etc/sysctl.d/99-k3s.conf
-echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.d/99-k3s.conf
-sudo sysctl --system
-
-# ---- Install zarf ----
-
-ZARF_VERSION="v0.73.0"
-
-rm -f /tmp/zarf /usr/local/bin/zarf
-
-curl -sL "https://github.com/zarf-dev/zarf/releases/download/${ZARF_VERSION}/zarf_${ZARF_VERSION}_Linux_amd64" \
-  -o /tmp/zarf
-
-ls -lh /tmp/zarf
-file /tmp/zarf
-chmod +x /tmp/zarf
-install -m 0755 /tmp/zarf /usr/local/bin/zarf
-
-/usr/local/bin/zarf version
-
-# ---- Install k3s ----
-curl -sfL https://get.k3s.io | sh -
-mkdir -p ~/.kube
-sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
-sudo chown "$USER:$USER" ~/.kube/config
-chmod 600 ~/.kube/config
-export KUBECONFIG="$HOME/.kube/config"
-kubectl get nodes
+mkdir -p /tmp/zarf-install
+tar -xzf /tmp/zarf-${ZARF_VERSION}.tar.gz -C /tmp/zarf-install
+sudo install -m 0755 "$(find /tmp/zarf-install -type f -name zarf | head -n1)" /usr/local/bin/zarf
+zarf version
 ```
 
 ## 4. Extract Edge package and initialize k3s
 
 ```bash
-PKG_VER="1.43.7"
-EDGE_PKG="/tmp/zarf-package-cpsh-edge-amd64-${PKG_VER}.tar.zst"
+tar -xzf "/tmp/zarf-packages-amd64-${PKG_VER}.tar.gz" -C /tmp
+EDGE_PKG="$(find /tmp -type f -name "zarf-package-cpsh-edge-amd64-${PKG_VER}.tar.zst" | head -n1)"
 echo "$EDGE_PKG"
 test -f "$EDGE_PKG"
 

@@ -9,6 +9,7 @@ This repository documents a lab setup for:
 - This is a lab/POC runbook.
 - For production, use CA-signed certificates and supported target architecture.
 - Certificate handling matters for Edge health, site registration, and connection flows.
+- For all Edge-to-CPSH API calls, use the DGC HTTPS endpoint on `5443`. Do not use the CPSH Admin Console port `5404` for `PLATFORM_ID`.
 
 ## Architecture
 - VM1: CPSH (DGC/API on `5443`, admin console on `5404`)
@@ -36,11 +37,3 @@ This repository documents a lab setup for:
 - CPSH Extended Capabilities install: <https://productresources.collibra.com/docs/cpsh/latest/Content/Installation/CPSH/ta_cpsh-install.htm>
 - Zarf-based CPSH Edge install: <https://productresources.collibra.com/docs/cpsh/latest/Content/Installation/CPSH/ta_cpsh-edge-extend-cap.htm>
 - Delete Edge site: <https://productresources.collibra.com/docs/collibra/latest/Content/Edge/EdgeSiteManagement/ta_delete-edge-site.htm>
-
-## License
-
-This project is licensed under the MIT License.
-
-## Credits
-
-Original material by Tej Tenmattam (Version 01, March 16, 2026).

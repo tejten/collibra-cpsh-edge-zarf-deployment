@@ -178,6 +178,106 @@ timedatectl status
 chronyc tracking || true
 ```
 
+## STIG RHEL 9.7 Service Registration Workaround
+
+Use this section only if the installer does not register native services on a hardened or STIG'd RHEL 9.7 image.
+
+Typical symptom:
+
+- `sudo /opt/collibra/console/bin/console install` fails because `chkconfig` is not installed
+- `sudo /opt/collibra/agent/bin/agent install` fails for the same reason
+
+If the installer-created service registration works in your environment, skip this section.
+
+### Create a Console `systemd` Unit
+
+Run on the Console node:
+
+```bash
+cat >/etc/systemd/system/collibra-console.service <<'EOF'
+[Unit]
+Description=Collibra Console
+Wants=network-online.target
+After=network-online.target postgresql-14.service
+
+[Service]
+Type=simple
+User=collibra
+Group=collibra
+WorkingDirectory=/opt/collibra/console
+ExecStart=/opt/collibra/console/bin/console console
+ExecStop=/opt/collibra/console/bin/console stop
+Restart=on-failure
+RestartSec=15
+TimeoutStartSec=300
+TimeoutStopSec=120
+SuccessExitStatus=0 143
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+### Create an Agent `systemd` Unit
+
+Run on each node that has an agent:
+
+```bash
+cat >/etc/systemd/system/collibra-agent.service <<'EOF'
+[Unit]
+Description=Collibra Agent
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=collibra
+Group=collibra
+WorkingDirectory=/opt/collibra/agent
+ExecStart=/opt/collibra/agent/bin/agent console
+ExecStop=/opt/collibra/agent/bin/agent stop
+Restart=on-failure
+RestartSec=15
+TimeoutStartSec=300
+TimeoutStopSec=120
+SuccessExitStatus=0 143
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+### Reload and Enable Services
+
+```bash
+systemctl daemon-reload
+systemctl enable --now collibra-console
+systemctl enable --now collibra-agent
+```
+
+Use these enable commands as follows:
+
+- run `systemctl enable --now collibra-console` on the Console node only
+- run `systemctl enable --now collibra-agent` on each node that has an agent
+
+### Validate Service Health
+
+```bash
+systemctl status collibra-console --no-pager
+systemctl status collibra-agent --no-pager
+journalctl -u collibra-console -b --no-pager | tail -100
+journalctl -u collibra-agent -b --no-pager | tail -100
+```
+
+Notes:
+
+- this workaround addresses service registration on hardened builds where `chkconfig` is unavailable
+- if the wrapper scripts daemonize instead of staying in the foreground in your environment, revisit the `Type=` setting before the change window
+
 ## 2. Install Collibra Console
 
 Node:

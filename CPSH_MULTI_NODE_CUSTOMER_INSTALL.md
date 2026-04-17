@@ -278,6 +278,98 @@ Notes:
 - this workaround addresses service registration on hardened builds where `chkconfig` is unavailable
 - if the wrapper scripts daemonize instead of staying in the foreground in your environment, revisit the `Type=` setting before the change window
 
+## RHEL 9.7 Offline PostgreSQL 14 Bundle Workaround
+
+Use this section if PostgreSQL 14 packages are not available from the customer's standard repositories on RHEL 9.7.
+
+This is especially useful when:
+
+- the environment is air-gapped
+- the approved internal repo does not mirror `PGDG 14`
+- the CPSH install depends on PostgreSQL 14 for Console or Repository nodes
+
+Build the bundle once on a connected RHEL 9.7 staging host, then reuse it on the Console, Repository primary, and Repository standby nodes.
+
+### Build the Offline PostgreSQL 14 Bundle on a Connected Host
+
+```bash
+sudo dnf install -y dnf-plugins-core createrepo_c tar
+
+sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo dnf -qy module disable postgresql
+
+export BUNDLE=/var/tmp/pgsql14-rhel97-offline
+rm -rf "$BUNDLE"
+mkdir -p "$BUNDLE"/{rpms,keys}
+
+sudo dnf download \
+  --resolve \
+  --alldeps \
+  --downloaddir "$BUNDLE/rpms" \
+  postgresql14 postgresql14-server postgresql14-contrib
+
+sudo cp /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release "$BUNDLE/keys/"
+curl -fLo "$BUNDLE/keys/PGDG-RPM-GPG-KEY-RHEL" \
+  https://download.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
+
+createrepo_c "$BUNDLE/rpms"
+
+sudo dnf --disablerepo='*' \
+  --repofrompath=pg14-local,"$BUNDLE/rpms" \
+  --enablerepo=pg14-local \
+  install --assumeno postgresql14 postgresql14-server postgresql14-contrib
+
+tar -C /var/tmp -czf ~/postgresql14-rhel97-offline.tar.gz "$(basename "$BUNDLE")"
+```
+
+Expected outcome:
+
+- `~/postgresql14-rhel97-offline.tar.gz` contains the PostgreSQL 14 RPMs, repo metadata, and GPG keys needed for offline installation
+
+### Install the Offline PostgreSQL 14 Bundle in the Air-Gapped Environment
+
+Copy `postgresql14-rhel97-offline.tar.gz` to each CPSH node that needs PostgreSQL 14, then run:
+
+```bash
+sudo mkdir -p /opt/offline
+sudo tar -xzf postgresql14-rhel97-offline.tar.gz -C /opt/offline
+
+sudo rpm --import /opt/offline/pgsql14-rhel97-offline/keys/RPM-GPG-KEY-redhat-release
+sudo rpm --import /opt/offline/pgsql14-rhel97-offline/keys/PGDG-RPM-GPG-KEY-RHEL
+```
+
+Create the offline repo file:
+
+```bash
+cat >/etc/yum.repos.d/pg14-offline.repo <<'EOF'
+[pg14-offline]
+name=PostgreSQL 14 offline bundle
+baseurl=file:///opt/offline/pgsql14-rhel97-offline/rpms
+enabled=1
+gpgcheck=1
+repo_gpgcheck=0
+EOF
+```
+
+Install PostgreSQL 14 from the local bundle:
+
+```bash
+sudo dnf clean all
+sudo dnf -qy module disable postgresql
+sudo dnf --disablerepo='*' --enablerepo='pg14-offline' \
+  install -y postgresql14 postgresql14-server postgresql14-contrib
+```
+
+### When to Use This in the Runbook
+
+Use this workaround in place of the internet-backed PostgreSQL installation commands in:
+
+- the Console install section
+- the Repository primary install section
+- the Repository standby install section
+
+If the customer already provides a working internal PostgreSQL 14 mirror, you can skip this workaround and use the normal `dnf` installation flow instead.
+
 ## 2. Install Collibra Console
 
 Node:

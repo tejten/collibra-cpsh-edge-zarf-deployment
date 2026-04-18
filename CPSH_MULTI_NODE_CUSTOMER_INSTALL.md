@@ -178,6 +178,48 @@ timedatectl status
 chronyc tracking || true
 ```
 
+### SSH / SSSD Troubleshooting Checklist
+
+Use this checklist if SSH access to a hardened customer host is slow or appears to hang before or after login.
+
+Common causes:
+
+- `sssd` lookups to AD, LDAP, or Kerberos are slow or failing
+- reverse DNS lookups are slow
+- GSSAPI or SSSD-backed SSH key lookups are enabled but not working cleanly
+- time sync or DNS resolution is inconsistent
+
+Quick checks:
+
+```bash
+systemctl status sssd --no-pager
+journalctl -u sssd -b --no-pager | tail -100
+
+grep -E '^(passwd|group|shadow|sudoers):' /etc/nsswitch.conf
+
+grep -R -E '^(UseDNS|GSSAPIAuthentication|AuthorizedKeysCommand|AuthorizedKeysCommandUser)' \
+  /etc/ssh/sshd_config /etc/ssh/sshd_config.d 2>/dev/null
+
+time getent passwd <admin-user>
+time id <admin-user>
+
+sssctl config-check
+sssctl domain-status || true
+timedatectl status
+```
+
+What to look for:
+
+- slow `getent` or `id` results usually point to `sssd` or directory lookup delays
+- delays before the password prompt often point to DNS, GSSAPI, or SSH key lookup issues
+- delays after authentication often point to PAM, NSS, or `sssd` account resolution
+
+If the customer is not using these features for install access, ask the infrastructure team to review:
+
+- `UseDNS`
+- `GSSAPIAuthentication`
+- `AuthorizedKeysCommand` if it references `sss_ssh_authorizedkeys`
+
 ## STIG RHEL 9.7 Service Registration Workaround
 
 Use this section only if the installer does not register native services on a hardened or STIG'd RHEL 9.7 image.

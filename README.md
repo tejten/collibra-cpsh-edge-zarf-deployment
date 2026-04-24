@@ -6,6 +6,7 @@ This repository documents a lab setup for:
 - Multi-node CPSH installation patterns for production-style environments.
 - Multiple certificate paths for Edge deployment.
 - Offline preparation for customer air-gapped environments.
+- CPSH and Edge upgrade workflows for moving from CPSH 2025.10 to CPSH 2026.03.
 
 ## Important
 - This is a lab/POC runbook.
@@ -32,6 +33,7 @@ This repository documents a lab setup for:
 5. Customer offline prep for `k3s` + `zarf` + package staging: [`CUSTOMER_AIRGAP_PREP_K3S_ZARF.md`](./CUSTOMER_AIRGAP_PREP_K3S_ZARF.md)
 6. Multi-node CPSH runbook with sizing, architecture, and AWS-specific appendices: [`CPSH_MULTI_NODE_INSTALL.md`](./CPSH_MULTI_NODE_INSTALL.md)
 7. Multi-node CPSH runbook for customer managed environments with customer certificates and offline Edge flow: [`CPSH_MULTI_NODE_CUSTOMER_INSTALL.md`](./CPSH_MULTI_NODE_CUSTOMER_INSTALL.md)
+8. CPSH 2025.10 to 2026.03 upgrade runbook, including PostgreSQL 14 to 17 transition and Edge Zarf upgrade: `./cpsh-2025.10-to-2026.03-upgrade-runbook.md`
 
 ## Quick order of execution
 1. For a customer air-gapped deployment, start with [`CUSTOMER_AIRGAP_PREP_K3S_ZARF.md`](./CUSTOMER_AIRGAP_PREP_K3S_ZARF.md) and stage every binary, RPM, init package, and Zarf package before the install window.
@@ -39,8 +41,9 @@ This repository documents a lab setup for:
 3. For single-node CPSH with customer-provided certificates, use [`CPSH_CUSTOM_CERT.md`](./CPSH_CUSTOM_CERT.md)
 4. For a multi-node CPSH deployment with production sizing and architecture guidance, use [`CPSH_MULTI_NODE_INSTALL.md`](./CPSH_MULTI_NODE_INSTALL.md)
 5. For a multi-node customer environment with internal DNS, customer certificates, and offline Edge flow, use [`CPSH_MULTI_NODE_CUSTOMER_INSTALL.md`](./CPSH_MULTI_NODE_CUSTOMER_INSTALL.md)
-6. For self-signed CPSH cert labs, use [`EDGE_INSTALL.md`](./EDGE_INSTALL.md)
-7. For customer/private CA cert environments, use [`EDGE_CUSTOM_CERT.md`](./EDGE_CUSTOM_CERT.md)
+6. For CPSH 2025.10 to 2026.03 upgrades, including PostgreSQL 14 to 17 transition and Edge package upgrade, use `/Users/ttenmattam/Documents/f1511-cpsh-edge-zarf/cpsh-2025.10-to-2026.03-upgrade-runbook.md`
+7. For self-signed CPSH cert labs, use [`EDGE_INSTALL.md`](./EDGE_INSTALL.md)
+8. For customer/private CA cert environments, use [`EDGE_CUSTOM_CERT.md`](./EDGE_CUSTOM_CERT.md)
 
 ## Customer Air-Gap Prep
 - Use [`CUSTOMER_AIRGAP_PREP_K3S_ZARF.md`](./CUSTOMER_AIRGAP_PREP_K3S_ZARF.md) when the target servers will not have Internet access.
@@ -56,6 +59,11 @@ This repository documents a lab setup for:
 - Use [`CPSH_MULTI_NODE_INSTALL.md`](./CPSH_MULTI_NODE_INSTALL.md) when you want a production style multi-node CPSH runbook with sizing, architecture, port guidance, repository validation, and an AWS-focused appendix.
 - Use [`CPSH_MULTI_NODE_CUSTOMER_INSTALL.md`](./CPSH_MULTI_NODE_CUSTOMER_INSTALL.md) when the customer environment uses internal DNS, customer issued certificates, and an offline Edge deployment path.
 - Both multi-node runbooks use generic hostnames and placeholders so they can be adapted safely to a new environment.
+
+## Upgrade Runbooks
+- Use `/Users/ttenmattam/Documents/f1511-cpsh-edge-zarf/cpsh-2025.10-to-2026.03-upgrade-runbook.md` when upgrading CPSH from 2025.10 to 2026.03.
+- That upgrade runbook covers the PostgreSQL 14 to PostgreSQL 17 prerequisite, CPSH node upgrade order, post-upgrade validation, and Edge upgrade through the CPSH Extended Capabilities Zarf package.
+- Keep the Edge package version aligned with the Collibra compatibility matrix for CPSH 2026.03 rather than assuming the newest Edge package is supported.
 
 ## Certificate Paths
 - Use [`CPSH_CUSTOM_CERT.md`](./CPSH_CUSTOM_CERT.md) when DGC and Console should present customer-provided certificates instead of the default CPSH certificates. This runbook uses `BCFKS` keystores for the FIPS-enabled CPSH services.
